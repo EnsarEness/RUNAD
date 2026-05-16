@@ -25,6 +25,16 @@ export const metadata: Metadata = {
   description:
     "Social running protocol on Monad. Earn city NFT badges, join challenges, and build onchain reputation.",
   applicationName: APP_NAME,
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: APP_NAME,
+  },
+  icons: {
+    icon: "/icon-512.png",
+    apple: "/icon-192.png",
+  },
 };
 
 export const viewport: Viewport = {
