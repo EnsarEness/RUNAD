@@ -26,8 +26,17 @@ import { AnimatedStat } from "@/components/dashboard/animated-stat";
 import { QuickAction } from "@/components/dashboard/quick-action";
 import { ConnectButton } from "@/components/wallet/connect-button";
 import { useWallet } from "@/hooks/use-wallet";
+import { RunMap } from "@/components/map/dynamic-map";
 
 /* ─── MOCK DATA ─── */
+
+const MOCK_ROUTE: [number, number][] = [
+  [41.0082, 28.9784], [41.0085, 28.9790], [41.0090, 28.9798],
+  [41.0095, 28.9810], [41.0098, 28.9825], [41.0102, 28.9838],
+  [41.0108, 28.9845], [41.0115, 28.9850], [41.0120, 28.9858],
+  [41.0125, 28.9862], [41.0130, 28.9855], [41.0135, 28.9848],
+  [41.0138, 28.9840], [41.0140, 28.9830], [41.0142, 28.9818],
+];
 
 const recentRuns = [
   {
@@ -329,6 +338,26 @@ export default function DashboardPage() {
           ))}
         </div>
       </section>
+
+      {/* ─── LAST RUN MAP ─── */}
+      <GlassCard glow className="overflow-hidden p-0">
+        <RunMap
+          positions={MOCK_ROUTE}
+          height="h-36"
+          followUser={false}
+          showMarkers
+          interactive={false}
+        />
+        <div className="flex items-center justify-between p-3">
+          <div>
+            <p className="text-xs font-semibold">Latest Run · Istanbul</p>
+            <p className="text-[10px] text-muted-foreground">8.24 km · 42:18 · Today</p>
+          </div>
+          <Link href="/run" className="rounded-lg bg-primary/15 px-2.5 py-1.5 text-[10px] font-medium text-primary transition-colors hover:bg-primary/25">
+            Details
+          </Link>
+        </div>
+      </GlassCard>
 
       {/* ─── RECENT RUNS ─── */}
       <section>
