@@ -66,8 +66,8 @@ const INITIAL_STATS: RunStats = {
   startTime: null,
 };
 
-const MIN_ACCURACY = 30; // meters - ignore inaccurate readings
-const MIN_DISTANCE = 3; // meters - minimum movement to record
+const MIN_ACCURACY = 100; // meters - accept less accurate GPS readings on mobile
+const MIN_DISTANCE = 2; // meters - minimum movement to record
 
 export function useGpsTracking(): GpsTracking {
   const [state, setState] = useState<TrackingState>("idle");
@@ -178,13 +178,15 @@ export function useGpsTracking(): GpsTracking {
           clearWatch();
           clearTimer();
         } else if (err.code === err.POSITION_UNAVAILABLE) {
-          setError("Konum alınamıyor");
+          setError("Konum alınamıyor. GPS sinyali zayıf.");
+        } else if (err.code === err.TIMEOUT) {
+          setError("GPS zaman aşımı. Tekrar deneyin.");
         }
       },
       {
         enableHighAccuracy: true,
-        maximumAge: 3000,
-        timeout: 10000,
+        maximumAge: 5000,
+        timeout: 30000,
       }
     );
   }, [startTimer, clearWatch, clearTimer]);
@@ -245,7 +247,7 @@ export function useGpsTracking(): GpsTracking {
         });
       },
       () => {},
-      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 }
     );
   }, [startTimer]);
 
