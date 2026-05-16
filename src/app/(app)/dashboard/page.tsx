@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -27,6 +28,7 @@ import { QuickAction } from "@/components/dashboard/quick-action";
 import { ConnectButton } from "@/components/wallet/connect-button";
 import { useWallet } from "@/hooks/use-wallet";
 import { RunMap } from "@/components/map/dynamic-map";
+import { supabase } from "@/lib/supabase";
 
 /* ─── MOCK DATA ─── */
 
@@ -101,11 +103,54 @@ function getGreeting() {
   return "Good evening";
 }
 
+function formatDuration(secs: number): string {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "Yesterday";
+  return `${days}d ago`;
+}
+
+type DbRun = {
+  id: string;
+  wallet_address: string;
+  distance_meters: number;
+  duration_seconds: number;
+  pace: string | null;
+  calories: number | null;
+  avg_speed: number | null;
+  positions: [number, number][] | null;
+  created_at: string;
+};
+
 /* ─── PAGE ─── */
 
 export default function DashboardPage() {
   const greeting = getGreeting();
   const { isConnected, displayAddress } = useWallet();
+  const [dbRuns, setDbRuns] = useState<DbRun[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("runs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (data && data.length > 0) setDbRuns(data);
+      });
+  }, []);
 
   return (
     <MobileContainer withNav className="space-y-5 pt-6 pb-6">
@@ -342,7 +387,7 @@ export default function DashboardPage() {
       {/* ─── LAST RUN MAP ─── */}
       <GlassCard glow className="overflow-hidden p-0">
         <RunMap
-          positions={MOCK_ROUTE}
+          positions={dbRuns.length > 0 && dbRuns[0].positions ? dbRuns[0].positions : MOCK_ROUTE}
           height="h-36"
           followUser={false}
           showMarkers
@@ -350,8 +395,14 @@ export default function DashboardPage() {
         />
         <div className="flex items-center justify-between p-3">
           <div>
-            <p className="text-xs font-semibold">Latest Run · Istanbul</p>
-            <p className="text-[10px] text-muted-foreground">8.24 km · 42:18 · Today</p>
+            <p className="text-xs font-semibold">
+              Latest Run{dbRuns.length > 0 ? "" : " · Istanbul"}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              {dbRuns.length > 0
+                ? `${(dbRuns[0].distance_meters / 1000).toFixed(2)} km · ${formatDuration(dbRuns[0].duration_seconds)} · ${timeAgo(dbRuns[0].created_at)}`
+                : "8.24 km · 42:18 · Today"}
+            </p>
           </div>
           <Link href="/run" className="rounded-lg bg-primary/15 px-2.5 py-1.5 text-[10px] font-medium text-primary transition-colors hover:bg-primary/25">
             Details
@@ -368,7 +419,17 @@ export default function DashboardPage() {
           </Link>
         </div>
         <div className="space-y-2">
-          {recentRuns.map((run) => (
+          {(dbRuns.length > 0 ? dbRuns.map((run) => ({
+            id: run.id,
+            title: `${(run.distance_meters / 1000).toFixed(1)}km Run`,
+            city: "GPS",
+            km: (run.distance_meters / 1000).toFixed(2),
+            pace: run.pace ?? "--:--",
+            time: formatDuration(run.duration_seconds),
+            cal: run.calories ?? 0,
+            date: timeAgo(run.created_at),
+            badge: run.distance_meters >= 5000,
+          })) : recentRuns).map((run) => (
             <GlassCard
               key={run.id}
               className="p-4 transition-all hover:border-primary/20 hover:bg-white/[0.06]"

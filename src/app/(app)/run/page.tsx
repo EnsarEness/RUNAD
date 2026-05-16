@@ -30,6 +30,8 @@ import { Badge } from "@/components/ui/badge";
 import { ProgressRing } from "@/components/dashboard/progress-ring";
 import { RunMap } from "@/components/map/dynamic-map";
 import { useGpsTracking } from "@/hooks/use-gps-tracking";
+import { useSaveRun } from "@/hooks/use-save-run";
+import { useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 
 function formatDuration(secs: number): string {
@@ -50,8 +52,22 @@ type Tab = "gps" | "upload";
 export default function RunPage() {
   const [tab, setTab] = useState<Tab>("gps");
   const gps = useGpsTracking();
+  const { address } = useWallet();
+  const { loading: saving, success: saved, error: saveError, saveRun } = useSaveRun();
 
   const distanceKm = gps.stats.distance / 1000;
+
+  const handleSaveAndSubmit = async () => {
+    await saveRun({
+      walletAddress: address ?? "anonymous",
+      distanceMeters: gps.stats.distance,
+      durationSeconds: gps.stats.duration,
+      pace: gps.stats.pace,
+      calories: gps.stats.calories,
+      avgSpeed: gps.stats.avgSpeed,
+      positions: gps.stats.positions,
+    });
+  };
 
   return (
     <MobileContainer withNav className="space-y-4 pt-6 pb-6">
@@ -401,15 +417,50 @@ export default function RunPage() {
             </GlassCard>
           )}
 
-          {/* Submit */}
-          <NeonButton
-            className="w-full justify-center gap-2 animate-pulse-glow"
-            size="lg"
-            href="/mint"
-          >
-            <Zap className="size-4" />
-            Submit & Verify on Monad
-          </NeonButton>
+          {/* Save & Submit */}
+          {saved ? (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center">
+              <Check className="mx-auto size-6 text-emerald-400 mb-2" />
+              <p className="text-sm font-semibold text-emerald-400">Run Saved!</p>
+              <p className="text-xs text-muted-foreground mt-1">Your run data is stored securely</p>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSaveAndSubmit}
+              disabled={saving}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-violet-600 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed neon-glow animate-pulse-glow"
+            >
+              {saving ? (
+                <>
+                  <div className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Zap className="size-4" />
+                  Save & Submit on Monad
+                </>
+              )}
+            </button>
+          )}
+
+          {saveError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-center">
+              <p className="text-xs text-red-400">{saveError}</p>
+            </div>
+          )}
+
+          {saved && (
+            <NeonButton
+              className="w-full justify-center gap-2"
+              size="lg"
+              href="/mint"
+            >
+              <Zap className="size-4" />
+              Verify on Monad
+            </NeonButton>
+          )}
 
           <p className="text-center text-[10px] text-muted-foreground">
             Activity hash will be stored onchain as proof of run
