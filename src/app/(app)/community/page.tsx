@@ -486,7 +486,7 @@ export default function CommunityPage() {
               <div className="mt-1.5 flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-0.5">
                   <Users className="size-2.5" />
-                  {city.members.toLocaleString()}
+                  {city.members.toLocaleString("en-US")}
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-center gap-1">

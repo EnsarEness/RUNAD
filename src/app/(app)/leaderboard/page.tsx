@@ -433,7 +433,7 @@ export default function LeaderboardPage() {
                     <div className="text-right">
                       <p className="text-sm font-bold tabular-nums">{user.km} km</p>
                       <p className="text-[9px] text-muted-foreground">
-                        {user.rep.toLocaleString()} rep
+                        {user.rep.toLocaleString("en-US")} rep
                       </p>
                     </div>
                   </div>

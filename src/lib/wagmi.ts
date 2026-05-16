@@ -1,0 +1,14 @@
+import { http, createConfig } from "wagmi";
+import { injected, walletConnect } from "wagmi/connectors";
+import { monadTestnet } from "./chain";
+
+export const wagmiConfig = createConfig({
+  chains: [monadTestnet],
+  connectors: [
+    injected(),
+  ],
+  transports: {
+    [monadTestnet.id]: http(),
+  },
+  ssr: true,
+});

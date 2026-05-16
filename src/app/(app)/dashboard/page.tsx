@@ -24,6 +24,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ProgressRing } from "@/components/dashboard/progress-ring";
 import { AnimatedStat } from "@/components/dashboard/animated-stat";
 import { QuickAction } from "@/components/dashboard/quick-action";
+import { ConnectButton } from "@/components/wallet/connect-button";
+import { useWallet } from "@/hooks/use-wallet";
 
 /* ─── MOCK DATA ─── */
 
@@ -94,6 +96,7 @@ function getGreeting() {
 
 export default function DashboardPage() {
   const greeting = getGreeting();
+  const { isConnected, displayAddress } = useWallet();
 
   return (
     <MobileContainer withNav className="space-y-5 pt-6 pb-6">
@@ -102,24 +105,33 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3">
           <Avatar className="size-12 ring-2 ring-primary/40 animate-pulse-glow">
             <AvatarFallback className="bg-gradient-to-br from-primary/30 to-violet-600/30 text-base font-bold text-primary">
-              RN
+              {isConnected ? displayAddress.slice(0, 2).toUpperCase() : "RN"}
             </AvatarFallback>
           </Avatar>
           <div>
             <p className="text-lg font-semibold">{greeting} 🏃</p>
             <p className="text-xs text-muted-foreground">
-              <span className="text-primary font-medium">runner_nad</span> · Istanbul
+              {isConnected ? (
+                <span className="text-primary font-medium font-mono">{displayAddress}</span>
+              ) : (
+                <span className="text-primary font-medium">runner_nad</span>
+              )}
+              {" "}· Istanbul
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge
-            variant="outline"
-            className="border-amber-400/30 bg-amber-400/10 text-[10px] text-amber-300 gap-1"
-          >
-            <Flame className="size-3" />
-            7 day streak
-          </Badge>
+          {isConnected ? (
+            <Badge
+              variant="outline"
+              className="border-amber-400/30 bg-amber-400/10 text-[10px] text-amber-300 gap-1"
+            >
+              <Flame className="size-3" />
+              7 day streak
+            </Badge>
+          ) : (
+            <ConnectButton variant="compact" />
+          )}
         </div>
       </div>
 

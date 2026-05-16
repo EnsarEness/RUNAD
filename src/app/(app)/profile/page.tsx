@@ -34,6 +34,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ProgressRing } from "@/components/dashboard/progress-ring";
 import { AnimatedStat } from "@/components/dashboard/animated-stat";
 import { cn } from "@/lib/utils";
+import { useWallet } from "@/hooks/use-wallet";
+import { ConnectButton } from "@/components/wallet/connect-button";
 
 /* ─── MOCK DATA ─── */
 
@@ -112,9 +114,13 @@ function TimelineIcon({ type }: { type: string }) {
 export default function ProfilePage() {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"nfts" | "stats" | "timeline">("nfts");
+  const { address, isConnected, displayAddress, balance } = useWallet();
+
+  const walletDisplay = isConnected ? displayAddress : PROFILE.wallet;
+  const walletFull = isConnected ? address! : PROFILE.walletFull;
 
   function copyWallet() {
-    navigator.clipboard?.writeText(PROFILE.walletFull);
+    navigator.clipboard?.writeText(walletFull);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -164,16 +170,28 @@ export default function ProfilePage() {
           </div>
 
           {/* Wallet */}
-          <button
-            type="button"
-            onClick={copyWallet}
-            className="mt-4 mx-auto flex items-center gap-2 rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs transition-colors hover:bg-white/[0.08]"
-          >
-            <Wallet className="size-3 text-primary" />
-            <span className="font-mono text-muted-foreground">{PROFILE.wallet}</span>
-            <Copy className="size-3 text-muted-foreground" />
-            {copied && <span className="text-[10px] text-emerald-400">Copied!</span>}
-          </button>
+          {isConnected ? (
+            <button
+              type="button"
+              onClick={copyWallet}
+              className="mt-4 mx-auto flex items-center gap-2 rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs transition-colors hover:bg-white/[0.08]"
+            >
+              <span className="size-2 rounded-full bg-emerald-400" />
+              <Wallet className="size-3 text-primary" />
+              <span className="font-mono text-muted-foreground">{walletDisplay}</span>
+              {balance && (
+                <Badge className="border-0 bg-primary/15 text-[9px] text-primary">
+                  {balance.formatted} {balance.symbol}
+                </Badge>
+              )}
+              <Copy className="size-3 text-muted-foreground" />
+              {copied && <span className="text-[10px] text-emerald-400">Copied!</span>}
+            </button>
+          ) : (
+            <div className="mt-4">
+              <ConnectButton variant="default" />
+            </div>
+          )}
         </div>
       </GlassCard>
 
@@ -185,7 +203,7 @@ export default function ProfilePage() {
           size={90}
           strokeWidth={6}
           icon={<Shield className="mb-0.5 size-4 text-primary" />}
-          label={PROFILE.rep.toLocaleString()}
+          label={PROFILE.rep.toLocaleString("en-US")}
           sublabel="reputation"
         />
         <div className="grid flex-1 grid-cols-2 gap-2">
@@ -409,9 +427,9 @@ export default function ProfilePage() {
       {/* ─── ACTIONS ─── */}
       <GlassCard className="divide-y divide-white/[0.06] overflow-hidden">
         {[
-          { icon: Wallet, label: "Connected Wallet", value: PROFILE.wallet, action: "copy" },
-          { icon: Shield, label: "Onchain Reputation", value: `${PROFILE.rep.toLocaleString()} pts` },
-          { icon: ExternalLink, label: "View on Explorer", value: "" },
+          { icon: Wallet, label: "Connected Wallet", value: isConnected ? walletDisplay : "Not connected" },
+          { icon: Shield, label: "Onchain Reputation", value: `${PROFILE.rep.toLocaleString("en-US")} pts` },
+          { icon: ExternalLink, label: "View on Explorer", value: "", href: isConnected ? `https://testnet.monadexplorer.com/address/${address}` : undefined },
           { icon: Share2, label: "Share Profile", value: "" },
           { icon: Settings, label: "Settings", value: "" },
         ].map((item) => (

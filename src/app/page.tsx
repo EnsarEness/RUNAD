@@ -19,6 +19,7 @@ import { FloatingBadge } from "@/components/landing/floating-badge";
 import { AnimatedCounter } from "@/components/landing/animated-counter";
 import { ScrollReveal } from "@/components/landing/scroll-reveal";
 import { SectionHeading } from "@/components/landing/section-heading";
+import { ConnectButton } from "@/components/wallet/connect-button";
 
 /* ─── DATA ─── */
 
@@ -117,6 +118,7 @@ export default function LandingPage() {
             >
               Monad
             </Badge>
+            <ConnectButton variant="compact" />
             <NeonButton href="/dashboard" className="text-sm">
               Launch App
             </NeonButton>
@@ -164,13 +166,7 @@ export default function LandingPage() {
             Launch App
             <ChevronRight className="size-4" />
           </NeonButton>
-          <button
-            type="button"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-8 text-sm font-medium text-foreground backdrop-blur transition-all hover:border-primary/30 hover:bg-white/10"
-          >
-            <Wallet className="size-4 text-primary" />
-            Connect Wallet
-          </button>
+          <ConnectButton variant="hero" />
         </div>
 
         {/* Stats bar */}
@@ -431,13 +427,7 @@ export default function LandingPage() {
                   Launch App
                   <ChevronRight className="size-4" />
                 </NeonButton>
-                <button
-                  type="button"
-                  className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-8 text-sm font-medium backdrop-blur transition-all hover:border-primary/30 hover:bg-white/10"
-                >
-                  <Wallet className="size-4 text-primary" />
-                  Connect Wallet
-                </button>
+                <ConnectButton variant="hero" />
               </div>
             </div>
           </div>
