@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -8,9 +8,11 @@ import {
   Check,
   ChevronRight,
   Clock,
+  FileUp,
   Flame,
   Globe,
   MapPin,
+  Mountain,
   Navigation,
   Pause,
   Play,
@@ -20,6 +22,7 @@ import {
   Timer,
   TrendingUp,
   Upload,
+  X,
   Zap,
 } from "lucide-react";
 import { MobileContainer } from "@/components/layout/mobile-container";
@@ -33,6 +36,7 @@ import { useGpsTracking } from "@/hooks/use-gps-tracking";
 import { useSaveRun } from "@/hooks/use-save-run";
 import { useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
+import { parseGpx, type GpxRunData } from "@/lib/gpx-parser";
 
 function formatDuration(secs: number): string {
   const h = Math.floor(secs / 3600);
@@ -53,7 +57,15 @@ export default function RunPage() {
   const [tab, setTab] = useState<Tab>("gps");
   const gps = useGpsTracking();
   const { address } = useWallet();
-  const { loading: saving, success: saved, error: saveError, saveRun } = useSaveRun();
+  const { loading: saving, success: saved, error: saveError, saveRun, reset: resetSave } = useSaveRun();
+
+  /* ── GPX upload state ── */
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [gpxFile, setGpxFile] = useState<File | null>(null);
+  const [gpxData, setGpxData] = useState<GpxRunData | null>(null);
+  const [gpxError, setGpxError] = useState<string | null>(null);
+  const [gpxParsing, setGpxParsing] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const distanceKm = gps.stats.distance / 1000;
 
@@ -66,6 +78,70 @@ export default function RunPage() {
       calories: gps.stats.calories,
       avgSpeed: gps.stats.avgSpeed,
       positions: gps.stats.positions,
+    });
+  };
+
+  const processGpxFile = useCallback(async (file: File) => {
+    setGpxFile(file);
+    setGpxError(null);
+    setGpxData(null);
+    setGpxParsing(true);
+    resetSave();
+
+    try {
+      const text = await file.text();
+      const data = parseGpx(text);
+      if (data.positions.length < 2) {
+        throw new Error("GPX file must contain at least 2 track points.");
+      }
+      setGpxData(data);
+    } catch (err) {
+      setGpxError(err instanceof Error ? err.message : "Failed to parse GPX file.");
+    } finally {
+      setGpxParsing(false);
+    }
+  }, [resetSave]);
+
+  const handleFileDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.toLowerCase().endsWith(".gpx")) {
+        processGpxFile(file);
+      } else {
+        setGpxError("Please upload a .gpx file.");
+      }
+    },
+    [processGpxFile]
+  );
+
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) processGpxFile(file);
+      e.target.value = "";
+    },
+    [processGpxFile]
+  );
+
+  const clearGpxUpload = useCallback(() => {
+    setGpxFile(null);
+    setGpxData(null);
+    setGpxError(null);
+    resetSave();
+  }, [resetSave]);
+
+  const handleGpxSaveAndSubmit = async () => {
+    if (!gpxData) return;
+    await saveRun({
+      walletAddress: address ?? "anonymous",
+      distanceMeters: gpxData.distanceMeters,
+      durationSeconds: gpxData.durationSeconds,
+      pace: gpxData.pace,
+      calories: gpxData.calories,
+      avgSpeed: gpxData.avgSpeed,
+      positions: gpxData.positions,
     });
   };
 
@@ -169,30 +245,79 @@ export default function RunPage() {
       )}
 
       {/* ━━━━━━━━━━ IDLE — UPLOAD TAB ━━━━━━━━━━ */}
-      {gps.state === "idle" && tab === "upload" && (
+      {gps.state === "idle" && tab === "upload" && !gpxData && (
         <div className="space-y-4">
-          <GlassCard glow className="flex flex-col items-center p-8 text-center">
+          {/* Drag & drop zone */}
+          <GlassCard
+            glow
+            className={cn(
+              "relative flex flex-col items-center p-8 text-center transition-all",
+              dragOver && "ring-2 ring-primary/60 bg-primary/[0.06]"
+            )}
+          >
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleFileDrop}
+              className="absolute inset-0 z-10 cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".gpx"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+
             <div className="relative">
-              <div className="flex size-24 items-center justify-center rounded-3xl border-2 border-dashed border-primary/30 bg-primary/10 animate-pulse-glow">
-                <Upload className="size-10 text-primary" />
+              <div className={cn(
+                "flex size-24 items-center justify-center rounded-3xl border-2 border-dashed bg-primary/10 transition-colors",
+                dragOver ? "border-primary" : "border-primary/30"
+              )}>
+                {gpxParsing ? (
+                  <div className="size-10 animate-spin rounded-full border-3 border-primary/30 border-t-primary" />
+                ) : (
+                  <FileUp className="size-10 text-primary" />
+                )}
               </div>
               <div className="absolute -right-2 -top-2 flex size-8 items-center justify-center rounded-full bg-primary neon-glow">
                 <Zap className="size-4 text-white" />
               </div>
             </div>
-            <h2 className="mt-5 text-lg font-semibold">Import Your Run</h2>
+
+            <h2 className="mt-5 text-lg font-semibold">
+              {gpxParsing ? "Parsing..." : dragOver ? "Drop your file" : "Import Your Run"}
+            </h2>
             <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-              Upload GPX, FIT files or connect from Strava, Apple Health, or Garmin
+              {gpxParsing
+                ? "Reading track points from GPX file"
+                : "Drag & drop a GPX file here, or tap to browse"}
             </p>
+
+            {gpxFile && !gpxParsing && (
+              <div className="mt-4 flex items-center gap-2 rounded-lg bg-white/[0.06] px-3 py-2 text-xs">
+                <FileUp className="size-3.5 text-primary shrink-0" />
+                <span className="truncate max-w-[180px]">{gpxFile.name}</span>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); clearGpxUpload(); }}
+                  className="relative z-20 ml-1 rounded p-0.5 hover:bg-white/10"
+                >
+                  <X className="size-3 text-muted-foreground" />
+                </button>
+              </div>
+            )}
+
             <div className="mt-6 flex items-center gap-6">
               {[
-                { label: "GPX", desc: "GPS data" },
-                { label: "FIT", desc: "Garmin" },
-                { label: "CSV", desc: "Export" },
+                { label: "Strava", desc: "Export" },
+                { label: "Garmin", desc: "Connect" },
+                { label: "Nike", desc: "Run Club" },
               ].map((f) => (
                 <div key={f.label} className="text-center">
                   <div className="flex size-10 mx-auto items-center justify-center rounded-lg bg-white/5 text-xs font-bold text-primary">
-                    {f.label}
+                    {f.label.slice(0, 3).toUpperCase()}
                   </div>
                   <p className="mt-1 text-[9px] text-muted-foreground">{f.desc}</p>
                 </div>
@@ -200,23 +325,196 @@ export default function RunPage() {
             </div>
           </GlassCard>
 
+          {gpxError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-center">
+              <p className="text-xs text-red-400">{gpxError}</p>
+            </div>
+          )}
+
           <GlassCard className="p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              Or connect
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {["Strava", "Apple Health", "Garmin"].map((app) => (
-                <button
-                  key={app}
-                  type="button"
-                  className="flex flex-col items-center gap-1.5 rounded-xl bg-white/5 px-3 py-3 text-xs font-medium transition-colors hover:bg-white/10"
-                >
-                  <Globe className="size-5 text-primary" />
-                  {app}
-                </button>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">How to export GPX</p>
+            <div className="space-y-2.5">
+              {[
+                { icon: Globe, text: "Strava — Open activity → ⋯ → Export GPX" },
+                { icon: MapPin, text: "Garmin Connect → Activity → Export → GPX" },
+                { icon: Activity, text: "Nike Run Club — Use third-party exporter" },
+              ].map((tip) => (
+                <div key={tip.text} className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                  <tip.icon className="size-3.5 shrink-0 text-primary" />
+                  <span>{tip.text}</span>
+                </div>
               ))}
             </div>
           </GlassCard>
+        </div>
+      )}
+
+      {/* ━━━━━━━━━━ GPX PREVIEW (parsed data) ━━━━━━━━━━ */}
+      {gps.state === "idle" && tab === "upload" && gpxData && (
+        <div className="space-y-4">
+          {/* Route Map */}
+          {gpxData.positions.length >= 2 && (
+            <GlassCard strong glow className="overflow-hidden p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MapPin className="size-4 text-primary" />
+                  <span className="text-sm font-semibold">Imported Route</span>
+                </div>
+                <Badge className="border-0 bg-primary/20 text-[10px] text-primary">
+                  <FileUp className="mr-0.5 size-3" />
+                  GPX
+                </Badge>
+              </div>
+              <RunMap
+                positions={gpxData.positions}
+                height="h-48"
+                followUser={false}
+                showMarkers
+                interactive
+              />
+            </GlassCard>
+          )}
+
+          {/* Main stats */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { icon: Route, label: "Distance", value: `${(gpxData.distanceMeters / 1000).toFixed(2)} km`, highlight: true },
+              { icon: Clock, label: "Duration", value: formatDuration(gpxData.durationSeconds), highlight: false },
+              { icon: TrendingUp, label: "Avg Pace", value: `${gpxData.pace}/km`, highlight: false },
+            ].map((stat) => (
+              <GlassCard key={stat.label} glow={stat.highlight} className="p-3 text-center">
+                <stat.icon className="mx-auto size-4 text-primary" />
+                <p className="mt-2 text-lg font-bold tabular-nums">{stat.value}</p>
+                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+              </GlassCard>
+            ))}
+          </div>
+
+          {/* Extra stats */}
+          <div className="grid grid-cols-3 gap-2">
+            <GlassCard className="p-3 text-center">
+              <Flame className="mx-auto size-3.5 text-primary" />
+              <p className="mt-1 text-sm font-bold tabular-nums">{gpxData.calories}</p>
+              <p className="text-[8px] uppercase text-muted-foreground">Calories</p>
+            </GlassCard>
+            <GlassCard className="p-3 text-center">
+              <Activity className="mx-auto size-3.5 text-primary" />
+              <p className="mt-1 text-sm font-bold tabular-nums">{gpxData.avgSpeed}</p>
+              <p className="text-[8px] uppercase text-muted-foreground">Avg km/h</p>
+            </GlassCard>
+            <GlassCard className="p-3 text-center">
+              <Mountain className="mx-auto size-3.5 text-primary" />
+              <p className="mt-1 text-sm font-bold tabular-nums">{gpxData.elevationGain}m</p>
+              <p className="text-[8px] uppercase text-muted-foreground">Elevation</p>
+            </GlassCard>
+          </div>
+
+          {/* File info */}
+          {gpxFile && (
+            <GlassCard className="p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileUp className="size-4 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium truncate">{gpxFile.name}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {gpxData.positions.length} track points
+                      {gpxData.startTime && ` · ${new Date(gpxData.startTime).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearGpxUpload}
+                  className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            </GlassCard>
+          )}
+
+          {/* NFT Badge Eligible */}
+          {gpxData.distanceMeters / 1000 >= 1 && (
+            <GlassCard glow className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/30 to-violet-600/30 animate-float-slow">
+                  <MapPin className="size-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold">City Runner Badge</p>
+                  <p className="text-xs text-muted-foreground">
+                    NFT Badge Eligible · {(gpxData.distanceMeters / 1000).toFixed(1)} km run
+                  </p>
+                </div>
+                <Badge className="border-0 bg-amber-500/20 text-amber-300 text-[10px]">
+                  <Sparkles className="mr-0.5 size-3" />
+                  New!
+                </Badge>
+              </div>
+            </GlassCard>
+          )}
+
+          {/* Save & Submit */}
+          {saved ? (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center">
+              <Check className="mx-auto size-6 text-emerald-400 mb-2" />
+              <p className="text-sm font-semibold text-emerald-400">Run Saved!</p>
+              <p className="text-xs text-muted-foreground mt-1">Your imported run is stored securely</p>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleGpxSaveAndSubmit}
+              disabled={saving}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-violet-600 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed neon-glow animate-pulse-glow"
+            >
+              {saving ? (
+                <>
+                  <div className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Zap className="size-4" />
+                  Submit & Verify on Monad
+                </>
+              )}
+            </button>
+          )}
+
+          {saveError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-center">
+              <p className="text-xs text-red-400">{saveError}</p>
+            </div>
+          )}
+
+          {saved && (
+            <NeonButton className="w-full justify-center gap-2" size="lg" href="/mint">
+              <Zap className="size-4" />
+              Verify on Monad
+            </NeonButton>
+          )}
+
+          <p className="text-center text-[10px] text-muted-foreground">
+            Activity hash will be stored onchain as proof of run
+          </p>
+
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-2">
+            <NeonButton href="/dashboard" className="justify-center gap-1.5">
+              <ChevronRight className="size-4" />
+              Dashboard
+            </NeonButton>
+            <button
+              type="button"
+              onClick={clearGpxUpload}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-white/10"
+            >
+              <Upload className="size-4 text-primary" />
+              New Upload
+            </button>
+          </div>
         </div>
       )}
 
