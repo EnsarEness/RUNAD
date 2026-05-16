@@ -113,6 +113,7 @@ function TimelineIcon({ type }: { type: string }) {
 
 export default function ProfilePage() {
   const [copied, setCopied] = useState(false);
+  const [actionCopied, setActionCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"nfts" | "stats" | "timeline">("nfts");
   const { address, isConnected, displayAddress, balance } = useWallet();
 
@@ -426,27 +427,91 @@ export default function ProfilePage() {
 
       {/* ─── ACTIONS ─── */}
       <GlassCard className="divide-y divide-white/[0.06] overflow-hidden">
-        {[
-          { icon: Wallet, label: "Connected Wallet", value: isConnected ? walletDisplay : "Not connected" },
-          { icon: Shield, label: "Onchain Reputation", value: `${PROFILE.rep.toLocaleString("en-US")} pts` },
-          { icon: ExternalLink, label: "View on Explorer", value: "", href: isConnected ? `https://testnet.monadexplorer.com/address/${address}` : undefined },
-          { icon: Share2, label: "Share Profile", value: "" },
-          { icon: Settings, label: "Settings", value: "" },
-        ].map((item) => (
-          <button
-            key={item.label}
-            type="button"
-            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.04]"
-          >
-            <item.icon className="size-4 text-primary" />
-            <span className="flex-1 text-sm font-medium">{item.label}</span>
-            {item.value ? (
-              <span className="font-mono text-xs text-muted-foreground">{item.value}</span>
-            ) : (
-              <ChevronRight className="size-4 text-muted-foreground" />
-            )}
-          </button>
-        ))}
+        {/* Connected Wallet */}
+        <button
+          type="button"
+          onClick={() => {
+            if (isConnected && walletFull) {
+              navigator.clipboard?.writeText(walletFull);
+              setActionCopied(true);
+              setTimeout(() => setActionCopied(false), 2000);
+            }
+          }}
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.04]"
+        >
+          <Wallet className="size-4 text-primary" />
+          <span className="flex-1 text-sm font-medium">Connected Wallet</span>
+          <span className="font-mono text-xs text-muted-foreground">
+            {isConnected ? (actionCopied ? "Copied!" : walletDisplay) : "Not connected"}
+          </span>
+        </button>
+
+        {/* Onchain Reputation */}
+        <div className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+          <Shield className="size-4 text-primary" />
+          <span className="flex-1 text-sm font-medium">Onchain Reputation</span>
+          <span className="font-mono text-xs text-muted-foreground">
+            {PROFILE.rep.toLocaleString("en-US")} pts
+          </span>
+        </div>
+
+        {/* View on Explorer */}
+        <button
+          type="button"
+          onClick={() => {
+            if (isConnected && address) {
+              window.open(
+                `https://testnet.monadexplorer.com/address/${address}`,
+                "_blank",
+                "noopener,noreferrer"
+              );
+            } else {
+              alert("Connect your wallet first to view on explorer.");
+            }
+          }}
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.04]"
+        >
+          <ExternalLink className="size-4 text-primary" />
+          <span className="flex-1 text-sm font-medium">View on Explorer</span>
+          <ChevronRight className="size-4 text-muted-foreground" />
+        </button>
+
+        {/* Share Profile */}
+        <button
+          type="button"
+          onClick={async () => {
+            const shareUrl = isConnected && address
+              ? `${window.location.origin}/profile?address=${address}`
+              : window.location.href;
+            if (navigator.share) {
+              try {
+                await navigator.share({ title: "Runad Profile", url: shareUrl });
+              } catch {
+                /* user cancelled share */
+              }
+            } else {
+              await navigator.clipboard?.writeText(shareUrl);
+              setActionCopied(true);
+              setTimeout(() => setActionCopied(false), 2000);
+            }
+          }}
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.04]"
+        >
+          <Share2 className="size-4 text-primary" />
+          <span className="flex-1 text-sm font-medium">Share Profile</span>
+          <ChevronRight className="size-4 text-muted-foreground" />
+        </button>
+
+        {/* Settings */}
+        <button
+          type="button"
+          onClick={() => alert("Settings — Coming soon!")}
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.04]"
+        >
+          <Settings className="size-4 text-primary" />
+          <span className="flex-1 text-sm font-medium">Settings</span>
+          <ChevronRight className="size-4 text-muted-foreground" />
+        </button>
       </GlassCard>
 
       {/* ─── FOOTER ─── */}
