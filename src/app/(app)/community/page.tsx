@@ -16,8 +16,11 @@ import {
   Search,
   Sparkles,
   Star,
+  Target,
   TrendingUp,
+  Trophy,
   Users,
+  X,
   Zap,
 } from "lucide-react";
 import { MobileContainer } from "@/components/layout/mobile-container";
@@ -27,6 +30,8 @@ import { NeonButton } from "@/components/runad/neon-button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useChallenges } from "@/hooks/use-challenges";
+import { useWallet } from "@/hooks/use-wallet";
 
 /* ─── MOCK DATA ─── */
 
@@ -163,6 +168,57 @@ function LevelBadge({ level }: { level: string }) {
 export default function CommunityPage() {
   const [activeFilter, setActiveFilter] = useState<PaceFilter>("All");
   const [search, setSearch] = useState("");
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const { challenges, loading: challengesLoading, createChallenge, joinChallenge } = useChallenges();
+  const { address, isConnected } = useWallet();
+
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    challengeType: "distance",
+    targetValue: "",
+    location: "",
+    level: "All Levels",
+    maxParticipants: "30",
+    reward: "",
+    startDate: "",
+    endDate: "",
+  });
+
+  async function handleCreateChallenge() {
+    if (!form.title || !form.startDate || !form.endDate || !address) return;
+    setCreating(true);
+    try {
+      await createChallenge({
+        title: form.title,
+        description: form.description || undefined,
+        creatorWallet: address,
+        challengeType: form.challengeType,
+        targetValue: form.targetValue ? parseFloat(form.targetValue) : undefined,
+        startDate: new Date(form.startDate).toISOString(),
+        endDate: new Date(form.endDate).toISOString(),
+        location: form.location || undefined,
+        level: form.level,
+        maxParticipants: parseInt(form.maxParticipants) || 30,
+        reward: form.reward || undefined,
+      });
+      setShowCreateForm(false);
+      setForm({ title: "", description: "", challengeType: "distance", targetValue: "", location: "", level: "All Levels", maxParticipants: "30", reward: "", startDate: "", endDate: "" });
+    } catch {
+      // handled silently
+    }
+    setCreating(false);
+  }
+
+  async function handleJoin(challengeId: string) {
+    if (!address) return;
+    try {
+      await joinChallenge(challengeId, address);
+    } catch {
+      // already joined or error
+    }
+  }
 
   const filteredRunners = nearbyRunners.filter((r) => {
     if (activeFilter !== "All" && r.level !== activeFilter) return false;
@@ -179,10 +235,11 @@ export default function CommunityPage() {
         action={
           <button
             type="button"
+            onClick={() => setShowCreateForm(!showCreateForm)}
             className="flex size-9 items-center justify-center rounded-xl bg-primary/15 text-primary neon-glow-sm transition-transform active:scale-95"
             aria-label="Create event"
           >
-            <Plus className="size-5" />
+            <Plus className={cn("size-5 transition-transform", showCreateForm && "rotate-45")} />
           </button>
         }
       />
@@ -376,22 +433,223 @@ export default function CommunityPage() {
         </div>
       </section>
 
-      {/* ─── CREATE COMMUNITY RUN CTA ─── */}
-      <GlassCard glow className="relative overflow-hidden p-5">
-        <div className="absolute -left-8 -bottom-8 size-32 rounded-full bg-primary/15 blur-[50px]" />
-        <div className="relative flex items-center gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/30 to-violet-600/30 animate-pulse-glow">
-            <Plus className="size-7 text-primary" />
+      {/* ─── CREATE CHALLENGE CTA / FORM ─── */}
+      {!showCreateForm ? (
+        <div onClick={() => setShowCreateForm(true)} className="cursor-pointer">
+        <GlassCard
+          glow
+          className="relative overflow-hidden p-5"
+        >
+          <div className="absolute -left-8 -bottom-8 size-32 rounded-full bg-primary/15 blur-[50px]" />
+          <div className="relative flex items-center gap-4">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/30 to-violet-600/30 animate-pulse-glow">
+              <Plus className="size-7 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold">Create Challenge / Event</p>
+              <p className="text-xs text-muted-foreground">
+                Organize a run, set a goal, earn Organizer NFT
+              </p>
+            </div>
+            <ChevronRight className="size-5 text-muted-foreground" />
           </div>
-          <div className="flex-1">
-            <p className="font-semibold">Create a Community Run</p>
-            <p className="text-xs text-muted-foreground">
-              Organize a local meetup and earn Organizer NFT badge
-            </p>
-          </div>
-          <ChevronRight className="size-5 text-muted-foreground" />
+        </GlassCard>
         </div>
-      </GlassCard>
+      ) : (
+        <GlassCard strong glow className="p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Trophy className="size-4 text-primary" />
+              New Challenge
+            </h3>
+            <button type="button" onClick={() => setShowCreateForm(false)} className="text-muted-foreground hover:text-foreground">
+              <X className="size-4" />
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <input
+              type="text"
+              placeholder="Challenge title *"
+              value={form.title}
+              onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none"
+            />
+            <textarea
+              placeholder="Description (optional)"
+              value={form.description}
+              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+              rows={2}
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none resize-none"
+            />
+
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={form.challengeType}
+                onChange={(e) => setForm((p) => ({ ...p, challengeType: e.target.value }))}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm focus:border-primary/40 focus:outline-none"
+              >
+                <option value="distance">Distance Goal</option>
+                <option value="streak">Streak Goal</option>
+                <option value="time">Time Goal</option>
+              </select>
+              <input
+                type="number"
+                placeholder="Target (km)"
+                value={form.targetValue}
+                onChange={(e) => setForm((p) => ({ ...p, targetValue: e.target.value }))}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                placeholder="Location"
+                value={form.location}
+                onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none"
+              />
+              <select
+                value={form.level}
+                onChange={(e) => setForm((p) => ({ ...p, level: e.target.value }))}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm focus:border-primary/40 focus:outline-none"
+              >
+                <option value="All Levels">All Levels</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] text-muted-foreground ml-1">Start Date *</label>
+                <input
+                  type="date"
+                  value={form.startDate}
+                  onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground ml-1">End Date *</label>
+                <input
+                  type="date"
+                  value={form.endDate}
+                  onChange={(e) => setForm((p) => ({ ...p, endDate: e.target.value }))}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="number"
+                placeholder="Max participants"
+                value={form.maxParticipants}
+                onChange={(e) => setForm((p) => ({ ...p, maxParticipants: e.target.value }))}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none"
+              />
+              <input
+                type="text"
+                placeholder="Reward (e.g. NFT Badge)"
+                value={form.reward}
+                onChange={(e) => setForm((p) => ({ ...p, reward: e.target.value }))}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <NeonButton
+            className="w-full justify-center gap-2"
+            onClick={handleCreateChallenge}
+            disabled={creating || !form.title || !form.startDate || !form.endDate || !isConnected}
+          >
+            {creating ? (
+              <div className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : (
+              <Zap className="size-4" />
+            )}
+            {!isConnected ? "Connect Wallet First" : creating ? "Creating..." : "Create Challenge"}
+          </NeonButton>
+        </GlassCard>
+      )}
+
+      {/* ─── COMMUNITY CHALLENGES (from Supabase) ─── */}
+      {challenges.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+              <Trophy className="size-4 text-primary" />
+              Community Challenges
+            </h2>
+            <span className="text-[10px] text-muted-foreground">{challenges.length} active</span>
+          </div>
+          <div className="space-y-2.5">
+            {challenges.map((c) => (
+              <GlassCard key={c.id} glow className="p-4 transition-all hover:border-primary/20">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">{c.title}</h3>
+                      <LevelBadge level={c.level} />
+                    </div>
+                    {c.description && (
+                      <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{c.description}</p>
+                    )}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      {c.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="size-3" />
+                          {c.location}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Calendar className="size-3" />
+                        {new Date(c.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        {" — "}
+                        {new Date(c.end_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </span>
+                      {c.target_value && (
+                        <span className="flex items-center gap-1">
+                          <Target className="size-3" />
+                          {c.target_value} km
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {c.reward && (
+                    <Badge className="shrink-0 border-0 bg-amber-500/20 text-[9px] text-amber-300 gap-0.5">
+                      <Sparkles className="size-2.5" />
+                      {c.reward}
+                    </Badge>
+                  )}
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <Users className="size-3" />
+                    <span>{c.participant_count ?? 0} / {c.max_participants} joined</span>
+                  </div>
+                  <NeonButton
+                    className="h-7 px-4 text-xs"
+                    onClick={() => handleJoin(c.id)}
+                    disabled={!isConnected}
+                  >
+                    {isConnected ? "Join" : "Connect"}
+                  </NeonButton>
+                </div>
+                <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-monad-light transition-all"
+                    style={{ width: `${Math.min(100, ((c.participant_count ?? 0) / c.max_participants) * 100)}%` }}
+                  />
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ─── UPCOMING EVENTS ─── */}
       <section>
