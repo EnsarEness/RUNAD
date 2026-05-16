@@ -9,7 +9,9 @@ export default function AppLayout({
   return (
     <div className="relative min-h-screen">
       <GradientBg />
-      <main className="relative min-h-screen">{children}</main>
+      <main className="relative min-h-screen animate-page-enter">
+        {children}
+      </main>
       <BottomNav />
     </div>
   );

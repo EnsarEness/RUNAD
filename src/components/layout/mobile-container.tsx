@@ -13,7 +13,11 @@ export function MobileContainer({
 }: MobileContainerProps) {
   return (
     <div
-      className={cn("mx-auto w-full max-w-lg px-4", withNav && "pb-28", className)}
+      className={cn(
+        "mx-auto w-full max-w-lg px-5",
+        withNav && "pb-28",
+        className
+      )}
     >
       {children}
     </div>
