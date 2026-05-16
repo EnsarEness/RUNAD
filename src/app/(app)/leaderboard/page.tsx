@@ -42,7 +42,7 @@ const ENTRY_FEE = "10";
 
 const BASE_POOL = {
   total: 4820,
-  currency: "MON",
+  currency: "USDC",
   entry: "10",
   participants: 482,
   topPrize: 1200,
@@ -66,9 +66,9 @@ const maxKm = leaders[0].km;
 
 function getRewards(totalPool: number) {
   return [
-    { place: "1st Place", amount: `${(totalPool * 0.5).toLocaleString("en-US")} MON`, icon: Crown, color: "text-amber-400" },
-    { place: "2nd Place", amount: `${(totalPool * 0.3).toLocaleString("en-US")} MON`, icon: Medal, color: "text-zinc-300" },
-    { place: "3rd Place", amount: `${(totalPool * 0.2).toLocaleString("en-US")} MON`, icon: Medal, color: "text-amber-700" },
+    { place: "1st Place", amount: `${(totalPool * 0.5).toLocaleString("en-US")} USDC`, icon: Crown, color: "text-amber-400" },
+    { place: "2nd Place", amount: `${(totalPool * 0.3).toLocaleString("en-US")} USDC`, icon: Medal, color: "text-zinc-300" },
+    { place: "3rd Place", amount: `${(totalPool * 0.2).toLocaleString("en-US")} USDC`, icon: Medal, color: "text-amber-700" },
   ];
 }
 
@@ -218,7 +218,7 @@ export default function LeaderboardPage() {
                 <span className="text-sm font-medium text-primary">{pool.currency}</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {pool.participants.toLocaleString("en-US")} runners · {pool.entry} MON entry
+                {pool.participants.toLocaleString("en-US")} runners · {pool.entry} USDC entry
               </p>
             </div>
             <ProgressRing
@@ -281,7 +281,7 @@ export default function LeaderboardPage() {
               ? "Confirm in Wallet..."
               : isConfirming
                 ? "Confirming TX..."
-                : `Join Challenge · ${ENTRY_FEE} MON`}
+                : `Join Challenge · ${ENTRY_FEE} USDC`}
           </NeonButton>
         )}
         <button
