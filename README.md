@@ -22,11 +22,7 @@
 
 <br />
 
-<img src="docs/screenshots/hero-banner.png" alt="RUNAD Hero" width="100%" />
-
-<br />
-
-> 🏆 **Built at [Monad Blitz Istanbul 2026](https://monad.xyz) Hackathon**
+> 🏆 **Built at [Monad Blitz Çanakkale 2026](https://monad.xyz) Hackathon**
 
 </div>
 
@@ -36,7 +32,7 @@
 
 - [Overview](#-overview)
 - [Features](#-features)
-- [Screenshots](#-screenshots)
+- [Live Demo](#-live-demo)
 - [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
 - [Getting Started](#-getting-started)
@@ -115,26 +111,22 @@ Handcrafted glassmorphism design system with neon glow effects, gradient orbs, a
 
 ---
 
-## 📸 Screenshots
+## 🖥️ Live Demo
 
 <div align="center">
-<table>
-<tr>
-<td align="center"><img src="docs/screenshots/landing.png" alt="Landing Page" width="250" /><br /><b>Landing Page</b></td>
-<td align="center"><img src="docs/screenshots/dashboard.png" alt="Dashboard" width="250" /><br /><b>Dashboard</b></td>
-<td align="center"><img src="docs/screenshots/run-tracking.png" alt="Run Tracking" width="250" /><br /><b>GPS Tracking</b></td>
-</tr>
-<tr>
-<td align="center"><img src="docs/screenshots/leaderboard.png" alt="Leaderboard" width="250" /><br /><b>Leaderboard</b></td>
-<td align="center"><img src="docs/screenshots/community.png" alt="Community" width="250" /><br /><b>Community</b></td>
-<td align="center"><img src="docs/screenshots/profile.png" alt="Profile" width="250" /><br /><b>Profile</b></td>
-</tr>
-<tr>
-<td align="center"><img src="docs/screenshots/mint.png" alt="Mint NFT" width="250" /><br /><b>Mint NFT</b></td>
-<td align="center"><img src="docs/screenshots/gpx-import.png" alt="GPX Import" width="250" /><br /><b>GPX Import</b></td>
-<td align="center"><img src="docs/screenshots/wallet.png" alt="Wallet Connect" width="250" /><br /><b>Wallet Connect</b></td>
-</tr>
-</table>
+
+👉 **[Explore the full app at runad.vercel.app](https://runad.vercel.app)** 👈
+
+| Page | URL |
+|------|-----|
+| 🏠 Landing | [runad.vercel.app](https://runad.vercel.app) |
+| 📊 Dashboard | [runad.vercel.app/dashboard](https://runad.vercel.app/dashboard) |
+| 🏃 Run Tracking | [runad.vercel.app/run](https://runad.vercel.app/run) |
+| 🏆 Leaderboard | [runad.vercel.app/leaderboard](https://runad.vercel.app/leaderboard) |
+| 👥 Community | [runad.vercel.app/community](https://runad.vercel.app/community) |
+| 👤 Profile | [runad.vercel.app/profile](https://runad.vercel.app/profile) |
+| 🎖️ Mint NFT | [runad.vercel.app/mint](https://runad.vercel.app/mint) |
+
 </div>
 
 ---
@@ -445,7 +437,7 @@ The app connects to Monad Testnet by default:
 
 ## 👥 Team
 
-Built with ❤️ at **Monad Blitz Istanbul 2026** by:
+Built with ❤️ at **Monad Blitz Çanakkale 2026** by:
 
 | | Name | Role | Links |
 |--|------|------|-------|
