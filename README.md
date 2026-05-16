@@ -32,7 +32,7 @@
 
 - [Overview](#-overview)
 - [Features](#-features)
-- [Live Demo](#-live-demo)
+- [Screenshots](#-screenshots)
 - [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
 - [Getting Started](#-getting-started)
@@ -111,23 +111,36 @@ Handcrafted glassmorphism design system with neon glow effects, gradient orbs, a
 
 ---
 
-## 🖥️ Live Demo
+## 📸 Screenshots
 
 <div align="center">
 
 👉 **[Explore the full app at runad.vercel.app](https://runad.vercel.app)** 👈
 
-| Page | URL |
-|------|-----|
-| 🏠 Landing | [runad.vercel.app](https://runad.vercel.app) |
-| 📊 Dashboard | [runad.vercel.app/dashboard](https://runad.vercel.app/dashboard) |
-| 🏃 Run Tracking | [runad.vercel.app/run](https://runad.vercel.app/run) |
-| 🏆 Leaderboard | [runad.vercel.app/leaderboard](https://runad.vercel.app/leaderboard) |
-| 👥 Community | [runad.vercel.app/community](https://runad.vercel.app/community) |
-| 👤 Profile | [runad.vercel.app/profile](https://runad.vercel.app/profile) |
-| 🎖️ Mint NFT | [runad.vercel.app/mint](https://runad.vercel.app/mint) |
-
 </div>
+
+<table>
+  <tr>
+    <td align="center"><b>Landing Page</b></td>
+    <td align="center"><b>Dashboard</b></td>
+    <td align="center"><b>GPS Tracking</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/landing.png" width="250" /></td>
+    <td><img src="docs/screenshots/dashboard.png" width="250" /></td>
+    <td><img src="docs/screenshots/run-tracking.png" width="250" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Leaderboard</b></td>
+    <td align="center"><b>Community</b></td>
+    <td align="center"><b>Profile</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/leaderboard.png" width="250" /></td>
+    <td><img src="docs/screenshots/community.png" width="250" /></td>
+    <td><img src="docs/screenshots/profile.png" width="250" /></td>
+  </tr>
+</table>
 
 ---
 
