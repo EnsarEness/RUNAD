@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import {
   Award,
+  Check,
   ChevronRight,
   Clock,
   Crown,
   DollarSign,
   Flame,
   Gift,
+  Loader2,
   Medal,
   Route,
   Star,
@@ -17,8 +19,11 @@ import {
   Trophy,
   TrendingUp,
   Users,
+  Wallet,
   Zap,
 } from "lucide-react";
+import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
+import { parseEther } from "viem";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { GlassCard } from "@/components/runad/glass-card";
 import { PageHeader } from "@/components/runad/page-header";
@@ -27,6 +32,11 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ProgressRing } from "@/components/dashboard/progress-ring";
 import { cn } from "@/lib/utils";
+import { useWallet } from "@/hooks/use-wallet";
+import { ConnectButton } from "@/components/wallet/connect-button";
+
+const CHALLENGE_WALLET = "0x000000000000000000000000000000000000dEaD" as const;
+const ENTRY_FEE = "0.1";
 
 /* ─── MOCK DATA ─── */
 
@@ -128,6 +138,29 @@ export default function LeaderboardPage() {
   const countdown = useCountdown();
   const [showRewards, setShowRewards] = useState(false);
   const [visibleRows, setVisibleRows] = useState(0);
+  const [joined, setJoined] = useState(false);
+  const { isConnected, displayAddress } = useWallet();
+
+  const {
+    data: txHash,
+    isPending: isSending,
+    sendTransaction,
+    error: sendError,
+  } = useSendTransaction();
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({ hash: txHash });
+
+  useEffect(() => {
+    if (isConfirmed) setJoined(true);
+  }, [isConfirmed]);
+
+  function handleJoinChallenge() {
+    sendTransaction({
+      to: CHALLENGE_WALLET,
+      value: parseEther(ENTRY_FEE),
+    });
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -212,10 +245,33 @@ export default function LeaderboardPage() {
 
       {/* ─── QUICK ACTIONS ─── */}
       <div className="grid grid-cols-2 gap-2">
-        <NeonButton className="justify-center gap-2 animate-pulse-glow">
-          <Zap className="size-4" />
-          Join Challenge
-        </NeonButton>
+        {!isConnected ? (
+          <ConnectButton variant="default" className="justify-center" />
+        ) : joined || isConfirmed ? (
+          <div className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 px-4 py-2.5 text-sm font-medium text-emerald-400">
+            <Check className="size-4" />
+            Joined!
+          </div>
+        ) : (
+          <NeonButton
+            className="justify-center gap-2 animate-pulse-glow"
+            onClick={handleJoinChallenge}
+            disabled={isSending || isConfirming}
+          >
+            {isSending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : isConfirming ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Zap className="size-4" />
+            )}
+            {isSending
+              ? "Confirm in Wallet..."
+              : isConfirming
+                ? "Confirming..."
+                : `Join · ${ENTRY_FEE} MON`}
+          </NeonButton>
+        )}
         <button
           type="button"
           onClick={() => setShowRewards(!showRewards)}
@@ -225,6 +281,44 @@ export default function LeaderboardPage() {
           {showRewards ? "Hide" : "View"} Rewards
         </button>
       </div>
+
+      {/* TX Status */}
+      {txHash && (
+        <GlassCard className="p-3">
+          <div className="flex items-center gap-2">
+            {isConfirming ? (
+              <Loader2 className="size-3.5 text-primary animate-spin" />
+            ) : isConfirmed ? (
+              <Check className="size-3.5 text-emerald-400" />
+            ) : (
+              <Loader2 className="size-3.5 text-primary animate-spin" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium">
+                {isConfirmed ? "Transaction Confirmed" : "Processing..."}
+              </p>
+              <a
+                href={`https://testnet.monadexplorer.com/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-primary font-mono truncate block hover:underline"
+              >
+                {txHash}
+              </a>
+            </div>
+          </div>
+        </GlassCard>
+      )}
+
+      {sendError && (
+        <GlassCard className="p-3 border-red-500/20">
+          <p className="text-xs text-red-400">
+            {sendError.message?.includes("User rejected")
+              ? "Transaction rejected"
+              : "Transaction failed. Try again."}
+          </p>
+        </GlassCard>
+      )}
 
       {/* ─── REWARDS PANEL ─── */}
       {showRewards && (
