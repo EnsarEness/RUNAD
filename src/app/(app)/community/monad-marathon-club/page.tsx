@@ -49,7 +49,7 @@ const upcomingRuns = [
     date: "May 18, Sun",
     time: "7:00 AM",
     distance: "21 km",
-    location: "Bosphorus Bridge → Bebek",
+    location: "Çanakkale Kordon → Saat Kulesi",
     pace: "5:00 – 5:30/km",
     spots: 18,
     total: 50,
@@ -60,7 +60,7 @@ const upcomingRuns = [
     date: "May 20, Tue",
     time: "6:30 AM",
     distance: "10 km",
-    location: "Maçka Park Loop",
+    location: "Truva Yolu Parkuru",
     pace: "4:30 – 4:50/km",
     spots: 12,
     total: 30,
@@ -82,7 +82,7 @@ const upcomingRuns = [
     date: "May 25, Sun",
     time: "6:00 AM",
     distance: "30 km",
-    location: "Bosphorus Bridge Full Loop",
+    location: "Çanakkale Sahil Koşusu",
     pace: "5:10 – 5:40/km",
     spots: 8,
     total: 35,
@@ -183,7 +183,7 @@ export default function MonadMarathonClubPage() {
               </h1>
               <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <MapPin className="size-3" />
-                Istanbul / Global
+                Çanakkale / Global
                 <span className="mx-1">·</span>
                 <Calendar className="size-3" />
                 Founded at Monad Blitz 2026
