@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils";
 import { useWallet } from "@/hooks/use-wallet";
 import { ConnectButton } from "@/components/wallet/connect-button";
 
-const CHALLENGE_WALLET = "0x000000000000000000000000000000000000dEaD" as const;
+const CHALLENGE_WALLET = "0xa19033920c7EA350c013a6462d27572e6687263B" as const;
 const ENTRY_FEE = "10";
 
 /* ─── MOCK DATA ─── */
