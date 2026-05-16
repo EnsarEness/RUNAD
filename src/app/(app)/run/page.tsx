@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   Activity,
   Award,
@@ -563,19 +564,21 @@ export default function RunUploadPage() {
           </GlassCard>
 
           {/* Earned NFT */}
-          <GlassCard glow className="p-5 text-center">
-            <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/30 to-violet-600/30 animate-float">
-              <MapPin className="size-8 text-primary" />
-            </div>
-            <h3 className="mt-4 font-semibold">Çanakkale Runner — Tier I</h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              City NFT Badge unlocked!
-            </p>
-            <Badge className="mt-2 border-0 bg-amber-500/20 text-amber-300 text-[10px]">
-              <Award className="mr-1 size-3" />
-              New Badge Minted
-            </Badge>
-          </GlassCard>
+          <Link href="/mint">
+            <GlassCard glow className="p-5 text-center transition-all hover:scale-[1.02] hover:border-primary/30">
+              <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/30 to-violet-600/30 animate-float">
+                <MapPin className="size-8 text-primary" />
+              </div>
+              <h3 className="mt-4 font-semibold">Çanakkale Runner — Tier I</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                City NFT Badge unlocked! Tap to view.
+              </p>
+              <Badge className="mt-2 border-0 bg-amber-500/20 text-amber-300 text-[10px]">
+                <Award className="mr-1 size-3" />
+                New Badge Minted
+              </Badge>
+            </GlassCard>
+          </Link>
 
           {/* Stats Summary */}
           <div className="grid grid-cols-3 gap-2">
@@ -594,6 +597,10 @@ export default function RunUploadPage() {
           </div>
 
           {/* Actions */}
+          <NeonButton href="/mint" size="lg" className="w-full justify-center gap-2">
+            <Sparkles className="size-4" />
+            View NFT Badge
+          </NeonButton>
           <div className="grid grid-cols-2 gap-2">
             <NeonButton href="/dashboard" className="justify-center gap-1.5">
               <ChevronRight className="size-4" />
