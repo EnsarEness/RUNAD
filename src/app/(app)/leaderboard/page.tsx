@@ -36,17 +36,17 @@ import { useWallet } from "@/hooks/use-wallet";
 import { ConnectButton } from "@/components/wallet/connect-button";
 
 const CHALLENGE_WALLET = "0x000000000000000000000000000000000000dEaD" as const;
-const ENTRY_FEE = "0.1";
+const ENTRY_FEE = "10";
 
 /* ─── MOCK DATA ─── */
 
-const POOL = {
-  total: "48.2",
+const BASE_POOL = {
+  total: 4820,
   currency: "MON",
-  entry: "0.1",
+  entry: "10",
   participants: 482,
-  topPrize: "12",
-  top10Prize: "4.8",
+  topPrize: 1200,
+  top10Prize: 480,
 };
 
 const leaders = [
@@ -64,12 +64,13 @@ const leaders = [
 
 const maxKm = leaders[0].km;
 
-const rewards = [
-  { place: "1st Place", amount: "12 MON", icon: Crown, color: "text-amber-400" },
-  { place: "2nd Place", amount: "7.2 MON", icon: Medal, color: "text-zinc-300" },
-  { place: "3rd Place", amount: "4.8 MON", icon: Medal, color: "text-amber-700" },
-  { place: "Top 10", amount: "Share of 14.4 MON", icon: Trophy, color: "text-primary" },
-];
+function getRewards(totalPool: number) {
+  return [
+    { place: "1st Place", amount: `${(totalPool * 0.5).toLocaleString("en-US")} MON`, icon: Crown, color: "text-amber-400" },
+    { place: "2nd Place", amount: `${(totalPool * 0.3).toLocaleString("en-US")} MON`, icon: Medal, color: "text-zinc-300" },
+    { place: "3rd Place", amount: `${(totalPool * 0.2).toLocaleString("en-US")} MON`, icon: Medal, color: "text-amber-700" },
+  ];
+}
 
 /* ─── COUNTDOWN HOOK ─── */
 
@@ -139,7 +140,15 @@ export default function LeaderboardPage() {
   const [showRewards, setShowRewards] = useState(false);
   const [visibleRows, setVisibleRows] = useState(0);
   const [joined, setJoined] = useState(false);
+  const [extraJoins, setExtraJoins] = useState(0);
   const { isConnected, displayAddress } = useWallet();
+
+  const pool = {
+    ...BASE_POOL,
+    total: BASE_POOL.total + extraJoins * parseInt(ENTRY_FEE),
+    participants: BASE_POOL.participants + extraJoins,
+  };
+  const rewards = getRewards(pool.total);
 
   const {
     data: txHash,
@@ -152,8 +161,11 @@ export default function LeaderboardPage() {
     useWaitForTransactionReceipt({ hash: txHash });
 
   useEffect(() => {
-    if (isConfirmed) setJoined(true);
-  }, [isConfirmed]);
+    if (isConfirmed && !joined) {
+      setJoined(true);
+      setExtraJoins((prev) => prev + 1);
+    }
+  }, [isConfirmed, joined]);
 
   function handleJoinChallenge() {
     sendTransaction({
@@ -202,11 +214,11 @@ export default function LeaderboardPage() {
                 Reward Pool
               </p>
               <div className="mt-1 flex items-baseline gap-1.5">
-                <span className="text-3xl font-bold text-gradient">{POOL.total}</span>
-                <span className="text-sm font-medium text-primary">{POOL.currency}</span>
+                <span className="text-3xl font-bold text-gradient">{pool.total.toLocaleString("en-US")}</span>
+                <span className="text-sm font-medium text-primary">{pool.currency}</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {POOL.participants} runners · {POOL.entry} MON entry
+                {pool.participants.toLocaleString("en-US")} runners · {pool.entry} MON entry
               </p>
             </div>
             <ProgressRing
@@ -268,8 +280,8 @@ export default function LeaderboardPage() {
             {isSending
               ? "Confirm in Wallet..."
               : isConfirming
-                ? "Confirming..."
-                : `Join · ${ENTRY_FEE} MON`}
+                ? "Confirming TX..."
+                : `Join Challenge · ${ENTRY_FEE} MON`}
           </NeonButton>
         )}
         <button
@@ -348,7 +360,7 @@ export default function LeaderboardPage() {
             Top 3
           </h2>
           <Badge className="border-0 bg-primary/15 text-[10px] text-primary">
-            {POOL.participants} runners
+            {pool.participants.toLocaleString("en-US")} runners
           </Badge>
         </div>
         <div className="flex items-end justify-center gap-3 pb-2">
@@ -462,7 +474,7 @@ export default function LeaderboardPage() {
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold">Full Rankings</h2>
           <span className="text-[10px] text-muted-foreground">
-            Top {leaders.length} of {POOL.participants}
+            Top {leaders.length} of {pool.participants.toLocaleString("en-US")}
           </span>
         </div>
         <div className="space-y-1.5">
@@ -541,7 +553,7 @@ export default function LeaderboardPage() {
       {/* ─── CHALLENGE STATS ─── */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { icon: Users, label: "Runners", value: `${POOL.participants}` },
+          { icon: Users, label: "Runners", value: `${pool.participants.toLocaleString("en-US")}` },
           { icon: Route, label: "Total KM", value: "18.4k" },
           { icon: Award, label: "NFTs Given", value: "126" },
         ].map((stat) => (
@@ -563,7 +575,7 @@ export default function LeaderboardPage() {
           <div>
             <p className="font-semibold">Climb the ranks!</p>
             <p className="text-xs text-muted-foreground">
-              Every kilometer counts. Run more to earn a bigger share of the <span className="text-primary font-medium">{POOL.total} {POOL.currency}</span> pool.
+              Every kilometer counts. Run more to earn a bigger share of the <span className="text-primary font-medium">{pool.total.toLocaleString("en-US")} {pool.currency}</span> pool.
             </p>
           </div>
         </div>
