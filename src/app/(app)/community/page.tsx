@@ -382,54 +382,70 @@ export default function CommunityPage() {
           </Link>
         </div>
         <div className="space-y-2.5">
-          {clubs.map((club) => (
-            <GlassCard
-              key={club.name}
-              className="overflow-hidden transition-all hover:border-primary/20"
-            >
-              <div className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/25 to-violet-600/25 text-sm font-bold text-primary">
-                    {club.avatar}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="truncate font-semibold">{club.name}</h3>
+          {clubs.map((club) => {
+            const isMonad = club.name === "Monad Marathon Club";
+            const card = (
+              <GlassCard
+                key={club.name}
+                className={cn(
+                  "overflow-hidden transition-all hover:border-primary/20",
+                  isMonad && "cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                )}
+              >
+                <div className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/25 to-violet-600/25 text-sm font-bold text-primary">
+                      {club.avatar}
                     </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
-                      {club.description}
-                    </p>
-                    <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Users className="size-2.5" />
-                        {club.members}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Route className="size-2.5" />
-                        {club.weeklyKm} km/wk
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="size-2.5" />
-                        {club.distance}
-                      </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="truncate font-semibold">{club.name}</h3>
+                        {isMonad && <ChevronRight className="size-3.5 text-primary" />}
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
+                        {club.description}
+                      </p>
+                      <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Users className="size-2.5" />
+                          {club.members}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Route className="size-2.5" />
+                          {club.weeklyKm} km/wk
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="size-2.5" />
+                          {club.distance}
+                        </span>
+                      </div>
                     </div>
+                    <LevelBadge level={club.level} />
                   </div>
-                  <LevelBadge level={club.level} />
                 </div>
-              </div>
-              <div className="flex items-center justify-between border-t border-white/[0.06] bg-white/[0.02] px-4 py-2.5">
-                <div className="flex items-center gap-2 text-xs">
-                  <Calendar className="size-3.5 text-primary" />
-                  <span className="text-muted-foreground">
-                    {club.nextRun} · {club.location}
-                  </span>
+                <div className="flex items-center justify-between border-t border-white/[0.06] bg-white/[0.02] px-4 py-2.5">
+                  <div className="flex items-center gap-2 text-xs">
+                    <Calendar className="size-3.5 text-primary" />
+                    <span className="text-muted-foreground">
+                      {club.nextRun} · {club.location}
+                    </span>
+                  </div>
+                  <Badge className="border-0 bg-primary/20 text-[10px] text-primary cursor-pointer hover:bg-primary/30 transition-colors">
+                    Join
+                  </Badge>
                 </div>
-                <Badge className="border-0 bg-primary/20 text-[10px] text-primary cursor-pointer hover:bg-primary/30 transition-colors">
-                  Join
-                </Badge>
-              </div>
-            </GlassCard>
-          ))}
+              </GlassCard>
+            );
+
+            if (isMonad) {
+              return (
+                <Link key={club.name} href="/community/monad-marathon-club" className="block">
+                  {card}
+                </Link>
+              );
+            }
+            return card;
+          })}
         </div>
       </section>
 
