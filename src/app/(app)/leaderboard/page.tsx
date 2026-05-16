@@ -31,12 +31,12 @@ import { cn } from "@/lib/utils";
 /* ─── MOCK DATA ─── */
 
 const POOL = {
-  total: "4,820",
-  currency: "USDC",
-  entry: "10",
+  total: "48.2",
+  currency: "MON",
+  entry: "0.1",
   participants: 482,
-  topPrize: "1,200",
-  top10Prize: "480",
+  topPrize: "12",
+  top10Prize: "4.8",
 };
 
 const leaders = [
@@ -55,10 +55,10 @@ const leaders = [
 const maxKm = leaders[0].km;
 
 const rewards = [
-  { place: "1st Place", amount: "1,200 USDC", icon: Crown, color: "text-amber-400" },
-  { place: "2nd Place", amount: "720 USDC", icon: Medal, color: "text-zinc-300" },
-  { place: "3rd Place", amount: "480 USDC", icon: Medal, color: "text-amber-700" },
-  { place: "Top 10", amount: "Share of 1,440 USDC", icon: Trophy, color: "text-primary" },
+  { place: "1st Place", amount: "12 MON", icon: Crown, color: "text-amber-400" },
+  { place: "2nd Place", amount: "7.2 MON", icon: Medal, color: "text-zinc-300" },
+  { place: "3rd Place", amount: "4.8 MON", icon: Medal, color: "text-amber-700" },
+  { place: "Top 10", amount: "Share of 14.4 MON", icon: Trophy, color: "text-primary" },
 ];
 
 /* ─── COUNTDOWN HOOK ─── */
@@ -173,7 +173,7 @@ export default function LeaderboardPage() {
                 <span className="text-sm font-medium text-primary">{POOL.currency}</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {POOL.participants} runners · {POOL.entry} USDC entry
+                {POOL.participants} runners · {POOL.entry} MON entry
               </p>
             </div>
             <ProgressRing
